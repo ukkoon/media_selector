@@ -42,7 +42,7 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             TextButton(
                 onPressed: () {
-                  MediaSelector.selectMedia(context, maxLength: 5);
+                  MediaSelector.selectMedia(context, maxLength: 5,aspectRatio:4/21);
                 },
                 child: Text('get images'))
           ],

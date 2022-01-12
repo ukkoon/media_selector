@@ -13,6 +13,7 @@ class MediaSelector {
       {includeCrop = false,
       crossAxisCount = 3,
       maxLength = 2,
+      aspectRatio = 1.0 / 1.91,
       backgroundColor = Colors.grey,
       tagColor = Colors.yellow,
       tagTextColor = Colors.black,
@@ -25,6 +26,7 @@ class MediaSelector {
     return await Navigator.of(context, rootNavigator: true).push(generateRoute(
         crossAxisCount,
         maxLength,
+        aspectRatio,
         backgroundColor,
         tagColor,
         tagTextColor,
@@ -32,12 +34,13 @@ class MediaSelector {
         loadingWidget));
   }
 
-  static Route<List<Uint8List>> generateRoute(crossAxisCount, maxLength,
+  static Route<List<Uint8List>> generateRoute(crossAxisCount, maxLength,aspectRatio,
       backgroundColor, tagColor, textColor, tagTextColor, loadingWidget) {
     return MaterialPageRoute(builder: (BuildContext context) {
       return _SelectMediaPage(
         crossAxisCount,
         maxLength,
+        aspectRatio,
         backgroundColor,
         tagColor,
         tagTextColor,
@@ -53,6 +56,7 @@ class _SelectMediaPage extends StatefulWidget {
   const _SelectMediaPage(
       this.crossAxisCount,
       this.maxLength,
+      this.aspectRatio,
       this.backgroundColor,
       this.tagColor,
       this.tagTextColor,
@@ -62,6 +66,7 @@ class _SelectMediaPage extends StatefulWidget {
       : super(key: key);
 
   final int crossAxisCount, maxLength;
+  final double aspectRatio;
 
   final Color backgroundColor, tagColor, textColor, tagTextColor;
   final Widget loadingWidget;
@@ -70,6 +75,7 @@ class _SelectMediaPage extends StatefulWidget {
   __SelectMediaPageState createState() => __SelectMediaPageState(
       this.crossAxisCount,
       this.maxLength,
+      this.aspectRatio,
       this.backgroundColor,
       this.tagColor,
       this.tagTextColor,
@@ -81,6 +87,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
   __SelectMediaPageState(
       this.crossAxisCount,
       this.maxLength,
+      this.aspectRatio,
       this.backgroundColor,
       this.tagColor,
       this.tagTextColor,
@@ -88,6 +95,8 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
       this.loadingWidget);
 
   final int crossAxisCount, maxLength;
+  final double aspectRatio;
+
   final Color backgroundColor, tagColor, textColor, tagTextColor;
   final Widget loadingWidget;
 
@@ -400,17 +409,17 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
       );
 
       media.crop = Crop(
-        controller: CropController(aspectRatio: 1.0 / 1.91),
+        controller: CropController(aspectRatio: aspectRatio),
         child: image,
         dimColor: Colors.black,
         backgroundColor: Colors.transparent,
         padding: const EdgeInsets.all(0),
         overlay: FittedBox(
           child: Container(
-            width: 1000,
-            height: 1910,
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.width * 1/aspectRatio,
             decoration: BoxDecoration(
-                border: Border.all(color: Colors.white, width: 5)),
+                border: Border.all(color: Colors.white, width: 1)),
           ),
         ),
       );
