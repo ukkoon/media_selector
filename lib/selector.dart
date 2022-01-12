@@ -377,14 +377,12 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
 
       media.thumbDataWithSize(800, 1600).then((value) {
         //await Future.delayed(const Duration(seconds: 4));
-        completer.complete(value);
-        print('thumbDataWithSize(800, 1600) complted');
+        completer.complete(value);        
       });
 
       //don't worry about await, too fast
 
       Uint8List thumbdata = (await media.thumbData)!;
-      print('thumbdata(small) complted');
 
       Widget image = FutureBuilder(
         future: completer.future,
