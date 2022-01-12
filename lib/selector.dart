@@ -187,8 +187,10 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
     if (providerCtx.watch<Album>().selectedMedias.isNotEmpty) {
       return Stack(
         children: [
-          ...mediasCopy.map((e) =>
-              Opacity(opacity: e == selectedMedia ? 1 : 0.001, child: e.crop!))
+          ...mediasCopy.map((e) => Opacity(
+              key: Key(e.id),
+              opacity: e == selectedMedia ? 1 : 0.001,
+              child: e.crop!))
         ],
       );
     } else {
@@ -376,12 +378,10 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
       Completer completer = Completer();
 
       media.thumbDataWithSize(800, 1600).then((value) {
-        //await Future.delayed(const Duration(seconds: 4));
-        completer.complete(value);        
+        completer.complete(value);
       });
 
       //don't worry about await, too fast
-
       Uint8List thumbdata = (await media.thumbData)!;
 
       Widget image = FutureBuilder(
@@ -390,28 +390,20 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
             ? Image.memory(
                 snapshot.data as Uint8List,
                 fit: BoxFit.cover,
+                //key: Key(media.id),
               )
-            : Container(),
+            : Image.memory(
+                thumbdata,
+                fit: BoxFit.cover,
+                //key: Key('${media.id}-thumbnail'),
+              ),
       );
 
       media.crop = Crop(
-        key: Key(media.id),
         controller: CropController(aspectRatio: 1.0 / 1.91),
         child: image,
         dimColor: Colors.black,
         backgroundColor: Colors.transparent,
-        background: Stack(
-          children: [
-            Positioned.fill(
-                child: Image.memory(
-              thumbdata,
-              fit: BoxFit.cover,
-            )),
-            Center(
-              child: loadingWidget,
-            )
-          ],
-        ),
         padding: const EdgeInsets.all(0),
         overlay: FittedBox(
           child: Container(
