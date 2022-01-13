@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:media_selector/media_selector.dart';
+import 'package:media_selector/selector.dart';
 
 void main() {
   runApp(const MyApp());
@@ -42,7 +43,13 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             TextButton(
                 onPressed: () {
-                  MediaSelector.selectMedia(context, maxLength: 5,aspectRatio:4/21);
+                  MediaSelector.selectMedia(context,
+                      maxLength: 5,
+                      aspectRatio: 1.0,
+                      shape: CropShape.circle,
+                      textColor: Colors.yellow,
+                      tagColor: Colors.red,
+                      tagTextColor: Colors.blue);
                 },
                 child: Text('get images'))
           ],

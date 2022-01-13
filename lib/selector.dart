@@ -8,25 +8,28 @@ import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
 
+enum CropShape { rectangle, circle }
+
 class MediaSelector {
   static Future<List<Uint8List>?> selectMedia(context,
-      {includeCrop = false,
-      crossAxisCount = 3,
-      maxLength = 2,
-      aspectRatio = 1.0 / 1.91,
-      backgroundColor = Colors.grey,
-      tagColor = Colors.yellow,
-      tagTextColor = Colors.black,
-      textColor = Colors.white,
-      loadingWidget = const Center(
+      {int crossAxisCount = 3,
+      int maxLength = 2,
+      double aspectRatio = 1.0 / 1.91,
+      CropShape shape: CropShape.rectangle,
+      Color backgroundColor = Colors.grey,
+      Color tagColor = Colors.yellow,
+      Color tagTextColor = Colors.black,
+      Color textColor = Colors.white,
+      Widget loadingWidget = const Center(
         child: CircularProgressIndicator(),
       )}) async {
-    assert(maxLength > 1);
+    assert(maxLength > 0);
 
     return await Navigator.of(context, rootNavigator: true).push(generateRoute(
         crossAxisCount,
         maxLength,
         aspectRatio,
+        shape,
         backgroundColor,
         tagColor,
         tagTextColor,
@@ -34,13 +37,22 @@ class MediaSelector {
         loadingWidget));
   }
 
-  static Route<List<Uint8List>> generateRoute(crossAxisCount, maxLength,aspectRatio,
-      backgroundColor, tagColor, textColor, tagTextColor, loadingWidget) {
+  static Route<List<Uint8List>> generateRoute(
+      crossAxisCount,
+      maxLength,
+      aspectRatio,
+      shape,
+      backgroundColor,
+      tagColor,
+      tagTextColor,
+      textColor,      
+      loadingWidget) {
     return MaterialPageRoute(builder: (BuildContext context) {
       return _SelectMediaPage(
         crossAxisCount,
         maxLength,
         aspectRatio,
+        shape,
         backgroundColor,
         tagColor,
         tagTextColor,
@@ -57,6 +69,7 @@ class _SelectMediaPage extends StatefulWidget {
       this.crossAxisCount,
       this.maxLength,
       this.aspectRatio,
+      this.shape,
       this.backgroundColor,
       this.tagColor,
       this.tagTextColor,
@@ -67,6 +80,7 @@ class _SelectMediaPage extends StatefulWidget {
 
   final int crossAxisCount, maxLength;
   final double aspectRatio;
+  final CropShape shape;
 
   final Color backgroundColor, tagColor, textColor, tagTextColor;
   final Widget loadingWidget;
@@ -76,6 +90,7 @@ class _SelectMediaPage extends StatefulWidget {
       this.crossAxisCount,
       this.maxLength,
       this.aspectRatio,
+      this.shape,
       this.backgroundColor,
       this.tagColor,
       this.tagTextColor,
@@ -88,6 +103,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
       this.crossAxisCount,
       this.maxLength,
       this.aspectRatio,
+      this.shape,
       this.backgroundColor,
       this.tagColor,
       this.tagTextColor,
@@ -96,6 +112,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
 
   final int crossAxisCount, maxLength;
   final double aspectRatio;
+  final CropShape shape;
 
   final Color backgroundColor, tagColor, textColor, tagTextColor;
   final Widget loadingWidget;
@@ -137,11 +154,12 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
                             slivers: [
                               SliverAppBar(
                                 backgroundColor: backgroundColor,
+                                foregroundColor: textColor,
                                 // pinned: false,
                                 // stretch: false,
                                 title: Text(
                                   '$maxLength개까지 선택 가능',
-                                  style: const TextStyle(fontSize: 17),
+                                  style: TextStyle(fontSize: 17),
                                 ),
                                 actions: [
                                   GestureDetector(
@@ -357,9 +375,9 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
             alignment: Alignment.center,
             child: Text(
               text,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 12,
-                  color: Colors.black,
+                  color: tagTextColor,
                   fontWeight: FontWeight.bold),
             ),
             decoration: BoxDecoration(
@@ -417,8 +435,10 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
         overlay: FittedBox(
           child: Container(
             width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.width * 1/aspectRatio,
+            height: MediaQuery.of(context).size.width * 1 / aspectRatio,
             decoration: BoxDecoration(
+                borderRadius:
+                    BorderRadius.circular(shape == CropShape.circle ? 1000 : 0),
                 border: Border.all(color: Colors.white, width: 1)),
           ),
         ),
