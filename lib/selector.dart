@@ -12,18 +12,18 @@ enum CropShape { rectangle, circle }
 
 class MediaSelector {
   static Future<List<Uint8List>?> selectMedia(context,
-      {int crossAxisCount = 3,
-      int maxLength = 2,
-      double aspectRatio = 1.0 / 1.91,
-      CropShape shape: CropShape.rectangle,
-      Color backgroundColor = Colors.grey,
-      Color tagColor = Colors.yellow,
-      Color tagTextColor = Colors.black,
-      Color textColor = Colors.white,
-      Widget loadingWidget = const Center(
+      {int? crossAxisCount = 3,
+      int? maxLength = 2,
+      double? aspectRatio = 1.0 / 1.91,
+      CropShape? shape: CropShape.rectangle,
+      Color? backgroundColor = Colors.grey,
+      Color? tagColor = Colors.yellow,
+      Color? tagTextColor = Colors.black,
+      Color? textColor = Colors.white,
+      Widget? loadingWidget = const Center(
         child: CircularProgressIndicator(),
       )}) async {
-    assert(maxLength > 0);
+    assert(maxLength! > 0);
 
     return await Navigator.of(context, rootNavigator: true).push(generateRoute(
         crossAxisCount,
