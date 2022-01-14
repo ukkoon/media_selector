@@ -45,7 +45,7 @@ class MediaSelector {
       backgroundColor,
       tagColor,
       tagTextColor,
-      textColor,      
+      textColor,
       loadingWidget) {
     return MaterialPageRoute(builder: (BuildContext context) {
       return _SelectMediaPage(
@@ -158,7 +158,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
                                 // pinned: false,
                                 // stretch: false,
                                 title: Text(
-                                  '$maxLength개까지 선택 가능',
+                                  '$maxLength개 선택 가능',
                                   style: TextStyle(fontSize: 17),
                                 ),
                                 actions: [
@@ -349,8 +349,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
     String text = "";
     Color color = Colors.transparent;
     Color backgroundColor = Colors.transparent;
-    int idx =
-        providerCtx.watch<Album>().selectedMedias.indexWhere((e) => e == media);
+    int idx = providerCtx.watch<Album>().selectedMedias.indexWhere((e) => e == media);
 
     if (idx != -1) {
       text = (idx + 1).toString();
@@ -374,7 +373,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
             height: 20,
             alignment: Alignment.center,
             child: Text(
-              text,
+              maxLength>1?text:"",
               style: TextStyle(
                   fontSize: 12,
                   color: tagTextColor,
@@ -399,9 +398,19 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
         providerCtx.read<Album>().setCurrentMedia(media);
         scrolls(media);
       }
-    } else if (providerCtx.read<Album>().selectedMedias.length >= maxLength) {
-      return;
     } else {
+      if (maxLength > 1 &&
+          providerCtx.read<Album>().selectedMedias.length >= maxLength) {
+        return;
+      }
+
+      if (maxLength == 1) {
+        Media? selectedMedia = providerCtx.read<Album>().selectedMedia;
+        if (selectedMedia != null) {
+          providerCtx.read<Album>().deleteSelectedMedia(selectedMedia);
+        }
+      }
+
       Completer completer = Completer();
 
       media.thumbDataWithSize(800, 1600).then((value) {
@@ -417,12 +426,10 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
             ? Image.memory(
                 snapshot.data as Uint8List,
                 fit: BoxFit.cover,
-                //key: Key(media.id),
               )
             : Image.memory(
                 thumbdata,
                 fit: BoxFit.cover,
-                //key: Key('${media.id}-thumbnail'),
               ),
       );
 

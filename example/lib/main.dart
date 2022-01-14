@@ -44,9 +44,9 @@ class _MyHomePageState extends State<MyHomePage> {
             TextButton(
                 onPressed: () {
                   MediaSelector.selectMedia(context,
-                      maxLength: 5,
+                      maxLength: 1,
                       aspectRatio: 1.0,
-                      shape: CropShape.circle,
+                      shape: CropShape.rectangle,
                       textColor: Colors.yellow,
                       tagColor: Colors.red,
                       tagTextColor: Colors.blue);
