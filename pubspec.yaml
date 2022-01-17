@@ -16,7 +16,7 @@ dependencies:
   crop: 
     git: 
       url: https://github.com/ukkoon/flutter_crop.git
-      ref: bugfix-27-pre-cropping
+      ref: v0.0.1
 
 dev_dependencies:
   flutter_test:

@@ -54,8 +54,8 @@ packages:
     dependency: transitive
     description:
       path: "."
-      ref: bugfix-27-pre-cropping
-      resolved-ref: "720642410ae4bbb53e3a035be0de180be0880597"
+      ref: "v0.0.1"
+      resolved-ref: be0e36ac5aafaf0e27d72780c48e94c3524e4715
       url: "https://github.com/ukkoon/flutter_crop.git"
     source: git
     version: "0.5.1+2"

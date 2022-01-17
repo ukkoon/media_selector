@@ -44,12 +44,14 @@ class _MyHomePageState extends State<MyHomePage> {
             TextButton(
                 onPressed: () {
                   MediaSelector.selectMedia(context,
-                      maxLength: 1,
+                      maxLength: 2,
                       aspectRatio: 1.0,
+                      previewHeight: MediaQuery.of(context).size.height*1/2,
                       shape: CropShape.rectangle,
-                      textColor: Colors.yellow,
-                      tagColor: Colors.red,
-                      tagTextColor: Colors.blue);
+                      textColor: Colors.white,
+                      backgroundColor:Colors.brown,
+                      tagColor: Colors.yellow,
+                      tagTextColor: Colors.black);
                 },
                 child: Text('get images'))
           ],
