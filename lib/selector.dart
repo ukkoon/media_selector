@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ffi';
+import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -14,7 +15,7 @@ enum CropShape { rectangle, circle }
 
 class MediaSelector {
   static Future<List<Uint8List>?> selectMedia(context,
-      {int? crossAxisCount = 3,
+      {int? crossAxisCount = 4,
       int? maxLength = 2,
       double? aspectRatio = 1.0 / 1.91,
       double? previewHeight = 300,
@@ -137,9 +138,8 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
   void initState() {
     super.initState();
     _data = fetchData();
-
-    controller = ScrollController();
-    gridCtrl = ScrollController();
+    controller = ScrollController(initialScrollOffset: previewHeight/2);
+    gridCtrl = ScrollController(initialScrollOffset: 0);
   }
 
   @override
@@ -161,11 +161,12 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
                           return CustomScrollView(
                             controller: controller,
                             primary: false,
-                            physics: NeverScrollableScrollPhysics(),
+                            physics: const NeverScrollableScrollPhysics(),
                             slivers: [
                               SliverAppBar(
                                 backgroundColor: backgroundColor,
                                 foregroundColor: textColor,
+                                elevation: 0,
                                 title: Text(
                                   '$maxLength개 선택 가능',
                                   style: const TextStyle(fontSize: 17),
@@ -179,12 +180,13 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
                                       child: const Text(
                                         '완료',
                                         style: TextStyle(
-                                          fontSize: 17,
+                                            fontSize: 17,
                                             fontWeight: FontWeight.bold),
                                       ),
                                     ),
                                   )
                                 ],
+                                pinned: true,
                                 snap: true,
                                 floating: true,
                               ),
@@ -199,15 +201,14 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
                               ),
                               SliverAppBar(
                                 backgroundColor: backgroundColor,
+                                elevation: 0,
                                 title: header(),
                                 centerTitle: false,
                                 automaticallyImplyLeading: false,
                                 titleSpacing: 0,
-                                pinned: false,
-                              ),
-                              SliverFillRemaining(
-                                child: medias(),
-                              )
+                                pinned: true,
+                              ),                              
+                              SliverFillRemaining(child: medias(),)
                             ],
                           );
                         },
@@ -357,22 +358,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
                         height: 30,
                       );
                     },
-                  )
-                      // (
-                      //   children: [
-                      //     ...albums
-                      //         .map((e) => Row(children: [
-                      //           InkWell(
-                      //               onTap: () {
-                      //                 Navigator.of(context).pop(e);
-                      //               },
-                      //               child: Text(e.name),
-                      //             )
-                      //         ],))
-                      //         .toList()
-                      //   ],
-                      // ),
-                      ),
+                  )),
                 ]),
               ),
             );
@@ -415,8 +401,8 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
           controller: gridCtrl,
           physics: const AlwaysScrollableScrollPhysics(),
           itemCount: assets.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
           ),
           itemBuilder: (context, index) {
             return FutureBuilder(
@@ -444,20 +430,19 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
       onNotification: (t) {
         if (t is ScrollUpdateNotification) {
           if (t.metrics.extentAfter < 300 && canLoad) loadMedias();
-          print(controller.offset);
 
           if (t.scrollDelta! > 20.0 && controller.offset == 0) {
-            controller.animateTo(controller.position.maxScrollExtent,
-                duration: const Duration(milliseconds: 500),
-                curve: Curves.easeIn);
+            controller.animateTo(previewHeight/2,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut);
           } else if (t.scrollDelta! <= -20 && gridCtrl.offset <= 0) {
             controller.animateTo(0,
-                duration: const Duration(milliseconds: 500),
-                curve: Curves.easeIn);
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut);
           } else if (t.scrollDelta! <= -20 && controller.offset == 0) {
-            controller.animateTo(controller.position.maxScrollExtent,
-                duration: const Duration(milliseconds: 500),
-                curve: Curves.easeIn);
+            controller.animateTo(previewHeight/2,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut);
           }
         }
         return true;
@@ -487,26 +472,28 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
       alignment: Alignment.topRight,
       height: 100,
       width: 100,
-      child: maxLength==1?Container(): Wrap(
-        children: [
-          Container(
-            width: 20,
-            height: 20,
-            alignment: Alignment.center,
-            child: Text(
-              maxLength > 1 ? text : "",
-              style: TextStyle(
-                  fontSize: 12,
-                  color: tagTextColor,
-                  fontWeight: FontWeight.bold),
+      child: maxLength == 1
+          ? Container()
+          : Wrap(
+              children: [
+                Container(
+                  width: 20,
+                  height: 20,
+                  alignment: Alignment.center,
+                  child: Text(
+                    maxLength > 1 ? text : "",
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: tagTextColor,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white)),
+                )
+              ],
             ),
-            decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white)),
-          )
-        ],
-      ),
     );
   }
 
@@ -534,24 +521,28 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
 
       Completer completer = Completer();
 
-      media.thumbDataWithSize(800, 1600).then((value) {
+      media.thumbDataWithSize(4096, 4096).then((value) {
         completer.complete(value);
       });
 
       //don't worry about await, too fast
       Uint8List thumbdata = (await media.thumbData)!;
 
-      Widget image = FutureBuilder(
-        future: completer.future,
-        builder: (context, snapshot) => snapshot.hasData
-            ? Image.memory(
-                snapshot.data as Uint8List,
-                fit: BoxFit.cover,
-              )
-            : Image.memory(
-                thumbdata,
-                fit: BoxFit.cover,
-              ),
+      Widget image = Stack(
+        children: [
+          Image.memory(
+            thumbdata,
+            fit: BoxFit.cover,
+          ),
+          FutureBuilder(
+              future: completer.future,
+              builder: (context, snapshot) => snapshot.hasData
+                  ? Image.memory(
+                      snapshot.data as Uint8List,
+                      fit: BoxFit.cover,
+                    )
+                  : Container())
+        ],
       );
 
       media.crop = Crop(
@@ -577,14 +568,15 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
     }
   }
 
-  scrolls(Media media) {
-    double itemheigth = MediaQuery.of(context).size.width / 4;
+  scrolls(Media media) async {
+    double itemheigth = MediaQuery.of(context).size.width / crossAxisCount;
     int index = providerCtx.read<Album>().assets.indexOf(media);
 
-    gridCtrl.animateTo(index ~/ 4 * itemheigth,
-        duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+    gridCtrl.animateTo(index ~/ crossAxisCount * itemheigth,
+        duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+
     controller.animateTo(0,
-        duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+        duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
   }
 
   loadMedias() async {
@@ -611,9 +603,20 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
   }
 
   Future<InitData> fetchData() async {
+    Map<AssetPathEntity, List<AssetEntity>> albumMap = {};
+
     List<AssetPathEntity> albums = await PhotoManager.getAssetPathList();
 
-    albums.sort((a, b) => a.isAll ? -1 : 1);
+    for (int i = 0; i < albums.length; i++) {
+      albumMap.addAll({albums[i]: await albums[i].assetList});
+    }
+
+    albums.sort((a, b) {
+      if (a.isAll) {
+        return -1;
+      }
+      return 1;
+    });
 
     List<AssetPathEntity> _onlyImageAlbums = [];
 
@@ -626,7 +629,6 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
 
     this.albums = _onlyImageAlbums;
 
-    //AssetPathEntity recents = albums.firstWhere((e) => e.isAll);
     var list =
         await albums[0].getAssetListRange(start: 0, end: crossAxisCount * 10);
 
