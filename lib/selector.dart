@@ -138,7 +138,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
   void initState() {
     super.initState();
     _data = fetchData();
-    controller = ScrollController(initialScrollOffset: previewHeight/2);
+    controller = ScrollController(initialScrollOffset: previewHeight / 2);
     gridCtrl = ScrollController(initialScrollOffset: 0);
   }
 
@@ -207,8 +207,10 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
                                 automaticallyImplyLeading: false,
                                 titleSpacing: 0,
                                 pinned: true,
-                              ),                              
-                              SliverFillRemaining(child: medias(),)
+                              ),
+                              SliverFillRemaining(
+                                child: medias(),
+                              )
                             ],
                           );
                         },
@@ -242,7 +244,8 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
   }
 
   header() {
-    return InkWell(
+    return GestureDetector(
+        behavior: HitTestBehavior.translucent,
         child: Padding(
           padding: const EdgeInsets.all(
             15,
@@ -432,7 +435,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
           if (t.metrics.extentAfter < 300 && canLoad) loadMedias();
 
           if (t.scrollDelta! > 20.0 && controller.offset == 0) {
-            controller.animateTo(previewHeight/2,
+            controller.animateTo(previewHeight / 2,
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOut);
           } else if (t.scrollDelta! <= -20 && gridCtrl.offset <= 0) {
@@ -440,7 +443,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOut);
           } else if (t.scrollDelta! <= -20 && controller.offset == 0) {
-            controller.animateTo(previewHeight/2,
+            controller.animateTo(previewHeight / 2,
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOut);
           }
@@ -549,6 +552,13 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
         controller: CropController(aspectRatio: aspectRatio),
         child: image,
         dimColor: Colors.black,
+        onChanged: (e) {
+          if (controller.offset != 0) {
+            controller.animateTo(0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut);
+          }
+        },
         backgroundColor: Colors.transparent,
         padding: const EdgeInsets.all(0),
         overlay: FittedBox(
