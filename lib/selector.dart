@@ -19,6 +19,7 @@ class MediaSelector {
       int? maxLength = 2,
       double? aspectRatio = 1.0 / 1.91,
       double? previewHeight = 300,
+      double? previewShowingRatio = 1/3,
       CropShape? shape: CropShape.rectangle,
       Color? backgroundColor = Colors.grey,
       Color? tagColor = Colors.yellow,
@@ -34,6 +35,7 @@ class MediaSelector {
         maxLength,
         aspectRatio,
         previewHeight,
+        previewShowingRatio,
         shape,
         backgroundColor,
         tagColor,
@@ -47,6 +49,7 @@ class MediaSelector {
       maxLength,
       aspectRatio,
       previewHeight,
+      previewShowingRatio,
       shape,
       backgroundColor,
       tagColor,
@@ -59,6 +62,7 @@ class MediaSelector {
         maxLength,
         aspectRatio,
         previewHeight,
+        previewShowingRatio,
         shape,
         backgroundColor,
         tagColor,
@@ -77,6 +81,7 @@ class _SelectMediaPage extends StatefulWidget {
       this.maxLength,
       this.aspectRatio,
       this.previewHeight,
+      this.previewShowingRatio,
       this.shape,
       this.backgroundColor,
       this.tagColor,
@@ -87,7 +92,7 @@ class _SelectMediaPage extends StatefulWidget {
       : super(key: key);
 
   final int crossAxisCount, maxLength;
-  final double aspectRatio, previewHeight;
+  final double aspectRatio, previewHeight, previewShowingRatio;
   final CropShape shape;
 
   final Color backgroundColor, tagColor, textColor, tagTextColor;
@@ -99,6 +104,7 @@ class _SelectMediaPage extends StatefulWidget {
       this.maxLength,
       this.aspectRatio,
       this.previewHeight,
+      this.previewShowingRatio,
       this.shape,
       this.backgroundColor,
       this.tagColor,
@@ -113,6 +119,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
       this.maxLength,
       this.aspectRatio,
       this.previewHeight,
+      this.previewShowingRatio,
       this.shape,
       this.backgroundColor,
       this.tagColor,
@@ -121,7 +128,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
       this.loadingWidget);
 
   final int crossAxisCount, maxLength;
-  final double aspectRatio, previewHeight;
+  final double aspectRatio, previewHeight, previewShowingRatio;
   final CropShape shape;
 
   final Color backgroundColor, tagColor, textColor, tagTextColor;
@@ -134,11 +141,14 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
   late Future<InitData> _data;
   bool canLoad = true;
 
+  //1-previewShowingRatio
+  late double previewHideRatio;
   @override
   void initState() {
     super.initState();
     _data = fetchData();
-    controller = ScrollController(initialScrollOffset: previewHeight / 2);
+    previewHideRatio=1-previewShowingRatio;
+    controller = ScrollController(initialScrollOffset: previewHeight * previewHideRatio);
     gridCtrl = ScrollController(initialScrollOffset: 0);
   }
 
@@ -435,7 +445,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
           if (t.metrics.extentAfter < 300 && canLoad) loadMedias();
 
           if (t.scrollDelta! > 20.0 && controller.offset == 0) {
-            controller.animateTo(previewHeight / 2,
+            controller.animateTo(previewHeight * previewHideRatio,
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOut);
           } else if (t.scrollDelta! <= -20 && gridCtrl.offset <= 0) {
@@ -443,7 +453,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOut);
           } else if (t.scrollDelta! <= -20 && controller.offset == 0) {
-            controller.animateTo(previewHeight / 2,
+            controller.animateTo(previewHeight * previewHideRatio,
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOut);
           }

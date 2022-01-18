@@ -47,6 +47,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       maxLength: 2,
                       aspectRatio: 1.0,
                       previewHeight: MediaQuery.of(context).size.height*1/2,
+                      previewShowingRatio:1/3,
                       shape: CropShape.rectangle,
                       textColor: Colors.white,
                       backgroundColor:Colors.brown,
