@@ -19,7 +19,7 @@ class MediaSelector {
       int? maxLength = 2,
       double? aspectRatio = 1.0 / 1.91,
       double? previewHeight = 300,
-      double? previewShowingRatio = 1/3,
+      double? previewShowingRatio = 1 / 3,
       CropShape? shape: CropShape.rectangle,
       Color? backgroundColor = Colors.grey,
       Color? tagColor = Colors.yellow,
@@ -147,8 +147,9 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
   void initState() {
     super.initState();
     _data = fetchData();
-    previewHideRatio=1-previewShowingRatio;
-    controller = ScrollController(initialScrollOffset: previewHeight * previewHideRatio);
+    previewHideRatio = 1 - previewShowingRatio;
+    controller =
+        ScrollController(initialScrollOffset: previewHeight * previewHideRatio);
     gridCtrl = ScrollController(initialScrollOffset: 0);
   }
 
@@ -181,21 +182,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
                                   '$maxLength개 선택 가능',
                                   style: const TextStyle(fontSize: 17),
                                 ),
-                                actions: [
-                                  GestureDetector(
-                                    onTap: () => tapComplete(),
-                                    child: Container(
-                                      padding: const EdgeInsets.only(right: 15),
-                                      alignment: Alignment.center,
-                                      child: const Text(
-                                        '완료',
-                                        style: TextStyle(
-                                            fontSize: 17,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ),
-                                  )
-                                ],
+                                actions: [buildActionButton()],
                                 pinned: true,
                                 snap: true,
                                 floating: true,
@@ -229,6 +216,31 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
           ],
         ),
       ),
+    );
+  }
+
+  buildActionButton() {
+    if (providerCtx
+        .watch<Album>()
+        .selectedMedias
+        .every((e) => e.completer!.isCompleted)) {
+      return GestureDetector(
+        onTap: () => tapComplete(),
+        child: Container(
+          padding: const EdgeInsets.only(right: 15),
+          alignment: Alignment.center,
+          child: const Text(
+            '완료',
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      alignment: Alignment.center,
+      padding: const EdgeInsets.only(right: 15),
+      child: loadingWidget,
     );
   }
 
@@ -536,6 +548,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
 
       media.thumbDataWithSize(4096, 4096).then((value) {
         completer.complete(value);
+        providerCtx.read<Album>().notifyListeners();
       });
 
       //don't worry about await, too fast
@@ -558,6 +571,8 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
         ],
       );
 
+      media.completer = completer;
+
       media.crop = Crop(
         controller: CropController(aspectRatio: aspectRatio),
         child: image,
@@ -573,6 +588,11 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
         padding: const EdgeInsets.all(0),
         overlay: FittedBox(
           child: Container(
+            alignment: Alignment.center,
+            // child: FutureBuilder(
+            //     future: completer.future,
+            //     builder: (context, snapshot) =>
+            //         !snapshot.hasData ? loadingWidget : Container()),
             width: MediaQuery.of(context).size.width,
             height: MediaQuery.of(context).size.width * 1 / aspectRatio,
             decoration: BoxDecoration(
@@ -668,10 +688,11 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
   }
 
   tapComplete() async {
+    var devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
     List<Media> medias = providerCtx.read<Album>().selectedMedias;
     List<Uint8List> images = [];
     for (int i = 0; i < medias.length; i++) {
-      var img = await medias[i].crop!.controller.crop();
+      var img = await medias[i].crop!.controller.crop(pixelRatio: devicePixelRatio);
       var byteData = await img.toByteData(format: ui.ImageByteFormat.png);
       var buffer = byteData!.buffer.asUint8List();
 
@@ -749,6 +770,7 @@ class Media extends AssetEntity {
 
   Future<Uint8List?> thumbdata;
   Crop? crop;
+  Completer? completer;
 
   @override
   bool operator ==(Object other) {
