@@ -15,7 +15,11 @@ enum CropShape { rectangle, circle }
 
 class MediaSelector {
   static Future<List<Uint8List>?> selectMedia(context,
-      {int? crossAxisCount = 4,
+      {
+      String? titleText = '',  
+      String? completeText= 'done',
+      String? albumSelectText ='',
+      int? crossAxisCount = 4,
       int? maxLength = 2,
       double? aspectRatio = 1.0 / 1.91,
       double? previewHeight = 300,
@@ -31,6 +35,9 @@ class MediaSelector {
     assert(maxLength! > 0);
 
     return await Navigator.of(context, rootNavigator: true).push(generateRoute(
+        titleText,
+        completeText,
+        albumSelectText,
         crossAxisCount,
         maxLength,
         aspectRatio,
@@ -45,6 +52,9 @@ class MediaSelector {
   }
 
   static Route<List<Uint8List>> generateRoute(
+      titleText,
+      completeText,
+      albumSelectText,
       crossAxisCount,
       maxLength,
       aspectRatio,
@@ -58,6 +68,9 @@ class MediaSelector {
       loadingWidget) {
     return MaterialPageRoute(builder: (BuildContext context) {
       return _SelectMediaPage(
+        titleText,
+        completeText,
+        albumSelectText,
         crossAxisCount,
         maxLength,
         aspectRatio,
@@ -77,6 +90,9 @@ class MediaSelector {
 
 class _SelectMediaPage extends StatefulWidget {
   const _SelectMediaPage(
+      this.titleText,
+      this.completeText,
+      this.albumSelectText,
       this.crossAxisCount,
       this.maxLength,
       this.aspectRatio,
@@ -91,6 +107,7 @@ class _SelectMediaPage extends StatefulWidget {
       {Key? key})
       : super(key: key);
 
+  final String titleText, completeText, albumSelectText;
   final int crossAxisCount, maxLength;
   final double aspectRatio, previewHeight, previewShowingRatio;
   final CropShape shape;
@@ -100,6 +117,9 @@ class _SelectMediaPage extends StatefulWidget {
 
   @override
   __SelectMediaPageState createState() => __SelectMediaPageState(
+      this.titleText,
+      this.completeText,
+      this.albumSelectText,
       this.crossAxisCount,
       this.maxLength,
       this.aspectRatio,
@@ -115,6 +135,9 @@ class _SelectMediaPage extends StatefulWidget {
 
 class __SelectMediaPageState extends State<_SelectMediaPage> {
   __SelectMediaPageState(
+      this.titleText,
+      this.completeText,
+      this.albumSelectText,
       this.crossAxisCount,
       this.maxLength,
       this.aspectRatio,
@@ -127,6 +150,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
       this.textColor,
       this.loadingWidget);
 
+  final String titleText,completeText,albumSelectText;
   final int crossAxisCount, maxLength;
   final double aspectRatio, previewHeight, previewShowingRatio;
   final CropShape shape;
@@ -140,6 +164,8 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
   late BuildContext providerCtx;
   late Future<InitData> _data;
   bool canLoad = true;
+
+  bool isLoading = false;
 
   //1-previewShowingRatio
   late double previewHideRatio;
@@ -179,7 +205,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
                                 foregroundColor: textColor,
                                 elevation: 0,
                                 title: Text(
-                                  '$maxLength개 선택 가능',
+                                  titleText,
                                   style: const TextStyle(fontSize: 17),
                                 ),
                                 actions: [buildActionButton()],
@@ -223,14 +249,14 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
     if (providerCtx
         .watch<Album>()
         .selectedMedias
-        .every((e) => e.completer!.isCompleted)) {
+        .every((e) => e.completer!.isCompleted || isLoading)) {
       return GestureDetector(
         onTap: () => tapComplete(),
         child: Container(
           padding: const EdgeInsets.only(right: 15),
           alignment: Alignment.center,
-          child: const Text(
-            '완료',
+          child: Text(
+            completeText,
             style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
           ),
         ),
@@ -310,8 +336,8 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
                     ),
                     backgroundColor: backgroundColor,
                     foregroundColor: textColor,
-                    title: const Text(
-                      '앨범 선택',
+                    title: Text(
+                      albumSelectText,
                       style: TextStyle(fontSize: 17),
                     ),
                     pinned: true,
@@ -688,18 +714,28 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
   }
 
   tapComplete() async {
-    var devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
-    List<Media> medias = providerCtx.read<Album>().selectedMedias;
-    List<Uint8List> images = [];
-    for (int i = 0; i < medias.length; i++) {
-      var img = await medias[i].crop!.controller.crop(pixelRatio: devicePixelRatio);
-      var byteData = await img.toByteData(format: ui.ImageByteFormat.png);
-      var buffer = byteData!.buffer.asUint8List();
+    setState(() {
+      isLoading = true;
+    });
 
-      images.add(buffer);
+    try {
+      var devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
+      List<Media> medias = providerCtx.read<Album>().selectedMedias;
+      List<Uint8List> images = [];
+      for (int i = 0; i < medias.length; i++) {
+        var img =
+            await medias[i].crop!.controller.crop(pixelRatio: devicePixelRatio);
+        var byteData = await img.toByteData(format: ui.ImageByteFormat.png);
+        var buffer = byteData!.buffer.asUint8List();
+
+        images.add(buffer);
+      }
+      Navigator.of(context).pop(images);
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
     }
-
-    Navigator.of(context).pop(images);
   }
 }
 
