@@ -238,7 +238,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
                           );
                         },
                       )
-                    : loadingWidget),
+                    : Center(child: loadingWidget,)),
           ],
         ),
       ),
