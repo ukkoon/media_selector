@@ -1,7 +1,7 @@
 name: media_selector
 description: instagrammable media selector.
 publish_to: none
-version: 0.0.8
+version: 0.0.9
 homepage:
 
 environment:

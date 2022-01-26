@@ -1,13 +1,10 @@
 import 'dart:async';
-import 'dart:ffi';
-import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:crop/crop.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
 
@@ -15,10 +12,9 @@ enum CropShape { rectangle, circle }
 
 class MediaSelector {
   static Future<List<Uint8List>?> selectMedia(context,
-      {
-      String? titleText = '',  
-      String? completeText= 'done',
-      String? albumSelectText ='',
+      {String? titleText = '',
+      String? completeText = 'done',
+      String? albumSelectText = '',
       int? crossAxisCount = 4,
       int? maxLength = 2,
       double? aspectRatio = 1.0 / 1.91,
@@ -116,73 +112,32 @@ class _SelectMediaPage extends StatefulWidget {
   final Widget loadingWidget;
 
   @override
-  __SelectMediaPageState createState() => __SelectMediaPageState(
-      this.titleText,
-      this.completeText,
-      this.albumSelectText,
-      this.crossAxisCount,
-      this.maxLength,
-      this.aspectRatio,
-      this.previewHeight,
-      this.previewShowingRatio,
-      this.shape,
-      this.backgroundColor,
-      this.tagColor,
-      this.tagTextColor,
-      this.textColor,
-      this.loadingWidget);
+  __SelectMediaPageState createState() => __SelectMediaPageState();
 }
 
 class __SelectMediaPageState extends State<_SelectMediaPage> {
-  __SelectMediaPageState(
-      this.titleText,
-      this.completeText,
-      this.albumSelectText,
-      this.crossAxisCount,
-      this.maxLength,
-      this.aspectRatio,
-      this.previewHeight,
-      this.previewShowingRatio,
-      this.shape,
-      this.backgroundColor,
-      this.tagColor,
-      this.tagTextColor,
-      this.textColor,
-      this.loadingWidget);
-
-  final String titleText,completeText,albumSelectText;
-  final int crossAxisCount, maxLength;
-  final double aspectRatio, previewHeight, previewShowingRatio;
-  final CropShape shape;
-
-  final Color backgroundColor, tagColor, textColor, tagTextColor;
-  final Widget loadingWidget;
-
   late ScrollController controller;
   late ScrollController gridCtrl;
   late List<AssetPathEntity> albums;
   late BuildContext providerCtx;
   late Future<InitData> _data;
   bool canLoad = true;
-
   bool isLoading = false;
 
-  //1-previewShowingRatio
   late double previewHideRatio;
   @override
   void initState() {
     super.initState();
     _data = fetchData();
-    previewHideRatio = 1 - previewShowingRatio;
-    controller =
-        ScrollController(initialScrollOffset: previewHeight * previewHideRatio);
+    previewHideRatio = 1 - widget.previewShowingRatio;
+    controller = ScrollController(initialScrollOffset: 0);
     gridCtrl = ScrollController(initialScrollOffset: 0);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: widget.backgroundColor,
       body: SafeArea(
         child: Stack(
           children: [
@@ -201,11 +156,11 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
                             physics: const NeverScrollableScrollPhysics(),
                             slivers: [
                               SliverAppBar(
-                                backgroundColor: backgroundColor,
-                                foregroundColor: textColor,
+                                backgroundColor: widget.backgroundColor,
+                                foregroundColor: widget.textColor,
                                 elevation: 0,
                                 title: Text(
-                                  titleText,
+                                  widget.titleText,
                                   style: const TextStyle(fontSize: 17),
                                 ),
                                 actions: [buildActionButton()],
@@ -213,24 +168,25 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
                                 snap: true,
                                 floating: true,
                               ),
+                              if(context.watch<Album>().inited)
                               SliverAppBar(
                                 pinned: false,
                                 leading: Container(),
                                 snap: true,
                                 floating: true,
                                 backgroundColor: Colors.black,
-                                collapsedHeight: previewHeight,
+                                collapsedHeight: widget.previewHeight,
                                 flexibleSpace: preview(),
                               ),
                               SliverAppBar(
-                                backgroundColor: backgroundColor,
+                                backgroundColor: widget.backgroundColor,
                                 elevation: 0,
                                 title: header(),
                                 centerTitle: false,
                                 automaticallyImplyLeading: false,
                                 titleSpacing: 0,
                                 pinned: true,
-                              ),
+                              ),                              
                               SliverFillRemaining(
                                 child: medias(),
                               )
@@ -238,7 +194,9 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
                           );
                         },
                       )
-                    : Center(child: loadingWidget,)),
+                    : Center(
+                        child: widget.loadingWidget,
+                      )),
           ],
         ),
       ),
@@ -256,8 +214,8 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
           padding: const EdgeInsets.only(right: 15),
           alignment: Alignment.center,
           child: Text(
-            completeText,
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+            widget.completeText,
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
           ),
         ),
       );
@@ -266,13 +224,12 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
     return Container(
       alignment: Alignment.center,
       padding: const EdgeInsets.only(right: 15),
-      child: loadingWidget,
+      child: widget.loadingWidget,
     );
   }
 
   preview() {
-    List<Media> mediasCopy =
-        List.from(providerCtx.read<Album>().selectedMedias);
+    List<Media> mediasCopy = List.from(providerCtx.read<Album>().selectedMedias);
     Media? selectedMedia = providerCtx.watch<Album>().selectedMedia;
     mediasCopy.sort((a, b) => a == selectedMedia ? 1 : -1);
     if (providerCtx.watch<Album>().selectedMedias.isNotEmpty) {
@@ -303,7 +260,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
             children: [
               Text(
                 providerCtx.read<Album>().currentAlbum.name,
-                style: TextStyle(color: textColor, fontSize: 15),
+                style: TextStyle(color: widget.textColor, fontSize: 15),
               ),
               const SizedBox(
                 width: 15,
@@ -313,7 +270,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
                 child: Icon(
                   Icons.navigate_next,
                   size: 18,
-                  color: textColor,
+                  color: widget.textColor,
                 ),
               )
             ],
@@ -323,22 +280,22 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
           var result = await Navigator.of(context, rootNavigator: true)
               .push(MaterialPageRoute(builder: (context) {
             return Scaffold(
-              backgroundColor: backgroundColor,
+              backgroundColor: widget.backgroundColor,
               body: SafeArea(
                 child: CustomScrollView(slivers: [
                   SliverAppBar(
                     leading: IconButton(
                       icon: const Icon(Icons.close),
-                      color: textColor,
+                      color: widget.textColor,
                       onPressed: () {
                         Navigator.of(context).pop();
                       },
                     ),
-                    backgroundColor: backgroundColor,
-                    foregroundColor: textColor,
+                    backgroundColor: widget.backgroundColor,
+                    foregroundColor: widget.textColor,
                     title: Text(
-                      albumSelectText,
-                      style: TextStyle(fontSize: 17),
+                      widget.albumSelectText,
+                      style: const TextStyle(fontSize: 17),
                     ),
                     pinned: true,
                   ),
@@ -375,7 +332,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
                                                 fit: BoxFit.cover,
                                               )
                                             : Container()),
-                                SizedBox(
+                                const SizedBox(
                                   width: 15,
                                 ),
                                 IntrinsicHeight(
@@ -387,15 +344,16 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
                                         albums[index].name,
                                         style: TextStyle(
                                             fontWeight: FontWeight.bold,
-                                            color: textColor),
+                                            color: widget.textColor),
                                       ),
-                                      SizedBox(
+                                      const SizedBox(
                                         height: 5,
                                       ),
                                       Text(
                                         albums[index].assetCount.toString(),
                                         style: TextStyle(
-                                            color: textColor.withOpacity(0.7)),
+                                            color: widget.textColor
+                                                .withOpacity(0.7)),
                                       )
                                     ],
                                   ),
@@ -418,7 +376,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
           switch (result.runtimeType) {
             case AssetPathEntity:
               var list = await (result as AssetPathEntity)
-                  .getAssetListRange(start: 0, end: crossAxisCount * 10);
+                  .getAssetListRange(start: 0, end: widget.crossAxisCount * 10);
 
               list = list
                   .map((e) => Media(
@@ -453,7 +411,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
           physics: const AlwaysScrollableScrollPhysics(),
           itemCount: assets.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
+            crossAxisCount: widget.crossAxisCount,
           ),
           itemBuilder: (context, index) {
             return FutureBuilder(
@@ -483,7 +441,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
           if (t.metrics.extentAfter < 300 && canLoad) loadMedias();
 
           if (t.scrollDelta! > 20.0 && controller.offset == 0) {
-            controller.animateTo(previewHeight * previewHideRatio,
+            controller.animateTo(widget.previewHeight * previewHideRatio,
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOut);
           } else if (t.scrollDelta! <= -20 && gridCtrl.offset <= 0) {
@@ -491,7 +449,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOut);
           } else if (t.scrollDelta! <= -20 && controller.offset == 0) {
-            controller.animateTo(previewHeight * previewHideRatio,
+            controller.animateTo(widget.previewHeight * previewHideRatio,
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOut);
           }
@@ -510,7 +468,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
 
     if (idx != -1) {
       text = (idx + 1).toString();
-      color = tagColor;
+      color = widget.tagColor;
     }
 
     if (idx != -1 && media == providerCtx.watch<Album>().selectedMedia) {
@@ -523,7 +481,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
       alignment: Alignment.topRight,
       height: 100,
       width: 100,
-      child: maxLength == 1
+      child: widget.maxLength == 1
           ? Container()
           : Wrap(
               children: [
@@ -532,10 +490,10 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
                   height: 20,
                   alignment: Alignment.center,
                   child: Text(
-                    maxLength > 1 ? text : "",
+                    widget.maxLength > 1 ? text : "",
                     style: TextStyle(
                         fontSize: 12,
-                        color: tagTextColor,
+                        color: widget.tagTextColor,
                         fontWeight: FontWeight.bold),
                   ),
                   decoration: BoxDecoration(
@@ -549,6 +507,10 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
   }
 
   tapMedia(Media media) async {
+    if(!providerCtx.read<Album>().inited){
+      providerCtx.read<Album>().inited=true;
+    }
+
     if (providerCtx.read<Album>().selectedMedias.contains(media)) {
       Media selectedMedia = providerCtx.read<Album>().selectedMedia!;
       if (selectedMedia == media) {
@@ -558,12 +520,12 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
         scrolls(media);
       }
     } else {
-      if (maxLength > 1 &&
-          providerCtx.read<Album>().selectedMedias.length >= maxLength) {
+      if (widget.maxLength > 1 &&
+          providerCtx.read<Album>().selectedMedias.length >= widget.maxLength) {
         return;
       }
 
-      if (maxLength == 1) {
+      if (widget.maxLength == 1) {
         Media? selectedMedia = providerCtx.read<Album>().selectedMedia;
         if (selectedMedia != null) {
           providerCtx.read<Album>().deleteSelectedMedia(selectedMedia);
@@ -600,7 +562,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
       media.completer = completer;
 
       media.crop = Crop(
-        controller: CropController(aspectRatio: aspectRatio),
+        controller: CropController(aspectRatio: widget.aspectRatio),
         child: image,
         dimColor: Colors.black,
         onChanged: (e) {
@@ -620,10 +582,10 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
             //     builder: (context, snapshot) =>
             //         !snapshot.hasData ? loadingWidget : Container()),
             width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.width * 1 / aspectRatio,
+            height: MediaQuery.of(context).size.width * 1 / widget.aspectRatio,
             decoration: BoxDecoration(
-                borderRadius:
-                    BorderRadius.circular(shape == CropShape.circle ? 1000 : 0),
+                borderRadius: BorderRadius.circular(
+                    widget.shape == CropShape.circle ? 1000 : 0),
                 border: Border.all(color: Colors.white, width: 1)),
           ),
         ),
@@ -635,10 +597,11 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
   }
 
   scrolls(Media media) async {
-    double itemheigth = MediaQuery.of(context).size.width / crossAxisCount;
+    double itemheigth =
+        MediaQuery.of(context).size.width / widget.crossAxisCount;
     int index = providerCtx.read<Album>().assets.indexOf(media);
 
-    gridCtrl.animateTo(index ~/ crossAxisCount * itemheigth,
+    gridCtrl.animateTo(index ~/ widget.crossAxisCount * itemheigth,
         duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
 
     controller.animateTo(0,
@@ -650,7 +613,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
     List<Media> assets = providerCtx.read<Album>().assets;
 
     var list = await providerCtx.read<Album>().currentAlbum.getAssetListRange(
-        start: assets.length, end: assets.length + crossAxisCount * 10);
+        start: assets.length, end: assets.length + widget.crossAxisCount * 10);
 
     if (list.isNotEmpty) {
       list = list
@@ -687,16 +650,16 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
     List<AssetPathEntity> _onlyImageAlbums = [];
 
     for (int i = 0; i < albums.length; i++) {
-      var list =
-          await albums[i].getAssetListRange(start: 0, end: crossAxisCount * 10);
+      var list = await albums[i]
+          .getAssetListRange(start: 0, end: widget.crossAxisCount * 10);
 
       if (list.isNotEmpty) _onlyImageAlbums.add(albums[i]);
     }
 
     this.albums = _onlyImageAlbums;
 
-    var list =
-        await albums[0].getAssetListRange(start: 0, end: crossAxisCount * 10);
+    var list = await albums[0]
+        .getAssetListRange(start: 0, end: widget.crossAxisCount * 10);
 
     return InitData(
       recentPhotos: list
@@ -750,10 +713,14 @@ class Album extends ChangeNotifier {
   Media? _selectedMedia;
   AssetPathEntity _currentAlbum;
 
+  bool _inited = false;
   List<Media> _selectedMedias;
   List<Media> _assets;
 
   List<Media> get selectedMedias => _selectedMedias;
+
+  bool get inited => _inited;
+  set inited(value) => _inited = value;
 
   AssetPathEntity get currentAlbum => _currentAlbum;
   setCurrentAlbum(currentAlbum, {withNotify = true}) {
