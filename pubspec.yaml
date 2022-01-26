@@ -1,11 +1,11 @@
 name: media_selector
 description: instagrammable media selector.
 publish_to: none
-version: 0.0.1
+version: 0.0.10
 homepage:
 
 environment:
-  sdk: ">=2.15.1 <3.0.0"
+  sdk: ">=2.15.0 <3.0.0"
   flutter: ">=1.17.0"
 
 dependencies:
@@ -16,7 +16,7 @@ dependencies:
   crop: 
     git: 
       url: https://github.com/ukkoon/flutter_crop.git
-      ref: bugfix-27-pre-cropping
+      ref: v0.0.2
 
 dev_dependencies:
   flutter_test:
