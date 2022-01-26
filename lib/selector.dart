@@ -27,7 +27,11 @@ class MediaSelector {
       Color? textColor = Colors.white,
       Widget? loadingWidget = const Center(
         child: CircularProgressIndicator(),
-      )}) async {
+      ),
+      Widget? actionLoadingWidget = const Center(
+        child: CircularProgressIndicator(),
+      ),
+      }) async {
     assert(maxLength! > 0);
 
     return await Navigator.of(context, rootNavigator: true).push(generateRoute(
@@ -44,7 +48,9 @@ class MediaSelector {
         tagColor,
         tagTextColor,
         textColor,
-        loadingWidget));
+        loadingWidget,
+        actionLoadingWidget
+        ));
   }
 
   static Route<List<Uint8List>> generateRoute(
@@ -61,7 +67,8 @@ class MediaSelector {
       tagColor,
       tagTextColor,
       textColor,
-      loadingWidget) {
+      loadingWidget,
+      actionLoadingWidget) {
     return MaterialPageRoute(builder: (BuildContext context) {
       return _SelectMediaPage(
         titleText,
@@ -78,6 +85,7 @@ class MediaSelector {
         tagTextColor,
         textColor,
         loadingWidget,
+        actionLoadingWidget,
         key: UniqueKey(),
       );
     });
@@ -100,6 +108,7 @@ class _SelectMediaPage extends StatefulWidget {
       this.tagTextColor,
       this.textColor,
       this.loadingWidget,
+      this.actionLoadingWidget,
       {Key? key})
       : super(key: key);
 
@@ -109,7 +118,7 @@ class _SelectMediaPage extends StatefulWidget {
   final CropShape shape;
 
   final Color backgroundColor, tagColor, textColor, tagTextColor;
-  final Widget loadingWidget;
+  final Widget loadingWidget, actionLoadingWidget;
 
   @override
   __SelectMediaPageState createState() => __SelectMediaPageState();
@@ -224,7 +233,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
     return Container(
       alignment: Alignment.center,
       padding: const EdgeInsets.only(right: 15),
-      child: widget.loadingWidget,
+      child: widget.actionLoadingWidget,
     );
   }
 
@@ -576,11 +585,7 @@ class __SelectMediaPageState extends State<_SelectMediaPage> {
         padding: const EdgeInsets.all(0),
         overlay: FittedBox(
           child: Container(
-            alignment: Alignment.center,
-            // child: FutureBuilder(
-            //     future: completer.future,
-            //     builder: (context, snapshot) =>
-            //         !snapshot.hasData ? loadingWidget : Container()),
+            alignment: Alignment.center,        
             width: MediaQuery.of(context).size.width,
             height: MediaQuery.of(context).size.width * 1 / widget.aspectRatio,
             decoration: BoxDecoration(
